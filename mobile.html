@@ -318,6 +318,27 @@
             backdrop-filter: blur(10px);
             display: none;
         }
+
+        /* YouTube container */
+        #youtube-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .youtube-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -348,8 +369,12 @@
             <p>Posicione-se e toque na tela para começar a experiência fotográfica!</p>
             <div class="touch-instruction">👆 TOQUE PARA COMEÇAR</div>
         </div>
-        <!-- O vídeo do YouTube será embedado via iframe -->
-        <div id="youtube-player"></div>
+        <!-- Container do YouTube -->
+        <div id="youtube-container">
+            <div class="youtube-placeholder">
+                <p>Carregando vídeo...</p>
+            </div>
+        </div>
     </div>
     
     <div id="camera-container">
@@ -379,6 +404,7 @@
                 this.stream = null;
                 this.frameImage = new Image();
                 this.isProcessing = false;
+                this.backendUrl = 'https://rendercerto-s7w2.onrender.com'; // SUA URL DO RENDER
                 
                 this.initializeElements();
                 this.setupEventListeners();
@@ -390,7 +416,7 @@
             initializeElements() {
                 this.fullscreenBtn = document.getElementById('fullscreen-btn');
                 this.videoContainer = document.getElementById('video-container');
-                this.youtubePlayer = document.getElementById('youtube-player');
+                this.youtubeContainer = document.getElementById('youtube-container');
                 this.cameraContainer = document.getElementById('camera-container');
                 this.cameraPreview = document.getElementById('camera-preview');
                 this.overlayText = document.getElementById('overlay-text');
@@ -437,17 +463,21 @@
             }
 
             loadYouTubeVideo() {
-                // Embed do vídeo do YouTube
-                this.youtubePlayer.innerHTML = `
-                    <iframe 
-                        width="100%" 
-                        height="100%" 
-                        src="https://www.youtube.com/embed/d6kcR0ltsFw?autoplay=1&mute=1&loop=1&playlist=d6kcR0ltsFw&controls=0&modestbranding=1&rel=0&showinfo=0" 
-                        frameborder="0" 
-                        allow="autoplay; encrypted-media" 
-                        allowfullscreen>
-                    </iframe>
-                `;
+                // Criar iframe do YouTube
+                const iframe = document.createElement('iframe');
+                iframe.width = '100%';
+                iframe.height = '100%';
+                iframe.src = 'https://www.youtube.com/embed/d6kcR0ltsFw?autoplay=1&mute=1&loop=1&playlist=d6kcR0ltsFw&controls=0&modestbranding=1&rel=0&showinfo=0&enablejsapi=1';
+                iframe.frameBorder = '0';
+                iframe.allow = 'autoplay; encrypted-media';
+                iframe.allowFullscreen = true;
+                
+                // Substituir placeholder pelo iframe
+                const placeholder = this.youtubeContainer.querySelector('.youtube-placeholder');
+                if (placeholder) {
+                    placeholder.remove();
+                }
+                this.youtubeContainer.appendChild(iframe);
             }
 
             async enterFullscreen() {
@@ -509,8 +539,7 @@
             }
 
             connectWebSocket() {
-                const backendUrl = 'https://seu-backend.render.com'; // ATUALIZAR COM SUA URL
-                this.socket = io(backendUrl, {
+                this.socket = io(this.backendUrl, {
                     timeout: 10000,
                     reconnectionAttempts: 5
                 });
@@ -530,6 +559,7 @@
                 this.socket.on('connect_error', (error) => {
                     console.error('❌ Erro de conexão:', error);
                     this.updateConnectionStatus('Erro de conexão', 'status-disconnected');
+                    this.showError('Erro de conexão com o servidor');
                 });
                 
                 this.socket.on('session-reset', () => {
@@ -782,6 +812,18 @@
             }
             lastTouchEnd = now;
         }, false);
+
+        // Prevenir menu de contexto
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Prevenir pull-to-refresh
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
     </script>
 </body>
 </html>
