@@ -12,7 +12,6 @@ class PhotoBoothSystem {
         this.setupEventListeners();
         this.connectWebSocket();
         this.displaySessionInfo();
-        this.checkQRCodeLibrary();
     }
 
     initializeElements() {
@@ -57,18 +56,6 @@ class PhotoBoothSystem {
         });
     }
 
-    checkQRCodeLibrary() {
-        if (typeof QRCode === 'undefined') {
-            console.warn('⚠️ Biblioteca QRCode não carregada');
-            this.generateMobileQrBtn.innerHTML = '⚠️ Recarregue a página';
-            this.generateMobileQrBtn.disabled = true;
-            this.generateQrBtn.innerHTML = '⚠️ Recarregue a página';
-            this.generateQrBtn.disabled = true;
-        } else {
-            console.log('✅ Biblioteca QRCode carregada');
-        }
-    }
-
     generateSessionId() {
         return 'sessao_' + Math.random().toString(36).substr(2, 6).toUpperCase();
     }
@@ -78,13 +65,15 @@ class PhotoBoothSystem {
     }
 
     generateMobileQR() {
+        // Verificar se a biblioteca está disponível
         if (typeof QRCode === 'undefined') {
-            alert('❌ Biblioteca QRCode não carregada. Recarregue a página.');
+            alert('❌ Biblioteca QRCode não carregada. Aguarde alguns segundos e tente novamente.');
+            console.error('QRCode não disponível');
             return;
         }
 
         this.generateMobileQrBtn.disabled = true;
-        this.generateMobileQrBtn.innerHTML = '⏳ Gerando QR Code...';
+        this.generateMobileQrBtn.textContent = '⏳ Gerando QR Code...';
 
         // Gerar URL para o mobile com session ID
         const mobileUrl = `${window.location.origin}/mobile.html?session=${this.sessionId}`;
@@ -97,32 +86,30 @@ class PhotoBoothSystem {
             QRCode.toCanvas(this.mobileQrElement, mobileUrl, { 
                 width: 280, 
                 height: 280,
-                margin: 2,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
+                margin: 2
             }, (error) => {
                 if (error) {
                     console.error('❌ Erro ao gerar QR Code mobile:', error);
                     this.mobileQrElement.innerHTML = '<p style="color: red; padding: 20px;">Erro ao gerar QR Code</p>';
                     this.generateMobileQrBtn.disabled = false;
-                    this.generateMobileQrBtn.innerHTML = '📱 Gerar QR Code do Celular';
+                    this.generateMobileQrBtn.textContent = '📱 Gerar QR Code do Celular';
                 } else {
                     console.log('✅ QR Code mobile gerado com sucesso');
                     this.mobileQrSection.style.display = 'block';
                     this.mobileUrlElement.textContent = mobileUrl;
-                    this.generateMobileQrBtn.innerHTML = '✅ QR Code Gerado!';
+                    this.generateMobileQrBtn.textContent = '✅ QR Code Gerado!';
                     
                     setTimeout(() => {
                         this.generateMobileQrBtn.disabled = false;
-                        this.generateMobileQrBtn.innerHTML = '📱 Gerar QR Code do Celular';
+                        this.generateMobileQrBtn.textContent = '📱 Gerar QR Code do Celular';
                     }, 3000);
                 }
             });
         } catch (error) {
             console.error('❌ Erro inesperado:', error);
             this.generateMobileQrBtn.disabled = false;
-            this.generateMobileQrBtn.innerHTML = '📱 Gerar QR Code do Celular';
+            this.generateMobileQrBtn.textContent = '📱 Gerar QR Code do Celular';
+            alert('❌ Erro ao gerar QR Code. Tente novamente.');
         }
     }
 
@@ -311,13 +298,14 @@ class PhotoBoothSystem {
             return;
         }
 
+        // Verificar se a biblioteca está disponível
         if (typeof QRCode === 'undefined') {
-            alert('❌ Biblioteca QRCode não carregada. Recarregue a página.');
+            alert('❌ Biblioteca QRCode não carregada. Aguarde alguns segundos e tente novamente.');
             return;
         }
 
         this.generateQrBtn.disabled = true;
-        this.generateQrBtn.innerHTML = '⏳ Enviando para IMGBB...';
+        this.generateQrBtn.textContent = '⏳ Enviando para IMGBB...';
 
         try {
             // Upload para IMGBB
@@ -331,29 +319,26 @@ class PhotoBoothSystem {
             QRCode.toCanvas(this.qrCodeElement, viewerUrl, {
                 width: 280,
                 height: 280,
-                margin: 2,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
+                margin: 2
             }, (error) => {
                 if (error) {
                     console.error('❌ Erro ao gerar QR Code:', error);
                     alert('❌ Erro ao gerar QR Code');
                     this.generateQrBtn.disabled = false;
-                    this.generateQrBtn.innerHTML = '📱 Gerar QR Code do Visualizador';
+                    this.generateQrBtn.textContent = '📱 Gerar QR Code do Visualizador';
                     return;
                 }
                 
                 this.qrSection.style.display = 'block';
                 this.viewerUrlElement.textContent = viewerUrl;
-                this.generateQrBtn.innerHTML = '✅ QR Code Gerado!';
+                this.generateQrBtn.textContent = '✅ QR Code Gerado!';
                 
                 // Scroll para o QR Code
                 this.qrSection.scrollIntoView({ behavior: 'smooth' });
                 
                 setTimeout(() => {
                     this.generateQrBtn.disabled = false;
-                    this.generateQrBtn.innerHTML = '📱 Gerar QR Code do Visualizador';
+                    this.generateQrBtn.textContent = '📱 Gerar QR Code do Visualizador';
                 }, 3000);
             });
             
@@ -361,7 +346,7 @@ class PhotoBoothSystem {
             console.error('❌ Erro ao gerar QR Code:', error);
             alert('❌ Erro ao enviar fotos para IMGBB. Verifique sua chave API.');
             this.generateQrBtn.disabled = false;
-            this.generateQrBtn.innerHTML = '📱 Gerar QR Code do Visualizador';
+            this.generateQrBtn.textContent = '📱 Gerar QR Code do Visualizador';
         }
     }
 
