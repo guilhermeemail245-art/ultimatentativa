@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cabine Fotográfica - Mobile</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #000; color: white; overflow: hidden; touch-action: manipulation; }
+        
+        #fullscreen-btn {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            padding: 20px 40px; font-size: 24px; background: #007bff; color: white;
+            border: none; border-radius: 10px; cursor: pointer; z-index: 1000;
+        }
+        
+        #video-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; display: flex; justify-content: center; align-items: center;
+        }
+        
+        #instruction-video {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        
+        #camera-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; display: none; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+        
+        #camera-preview {
+            width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);
+        }
+        
+        #overlay-text {
+            position: absolute; top: 20%; font-size: 32px; font-weight: bold;
+            color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            text-align: center; z-index: 10; display: none;
+        }
+        
+        #countdown {
+            position: absolute; font-size: 120px; font-weight: bold;
+            color: white; text-shadow: 4px 4px 8px rgba(0,0,0,0.7);
+            z-index: 10; display: none;
+        }
+        
+        #captured-photo {
+            position: absolute; width: 100%; height: 100%;
+            object-fit: cover; display: none; z-index: 5;
+        }
+        
+        #success-message {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); display: none; flex-direction: column;
+            justify-content: center; align-items: center; font-size: 32px;
+            text-align: center; z-index: 100;
+        }
+        
+        .session-info {
+            position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.7);
+            padding: 10px; border-radius: 5px; font-size: 12px; z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <button id="fullscreen-btn">Abrir Tela Cheia</button>
+    
+    <div class="session-info">
+        Sessão: <span id="session-display">-</span>
+    </div>
+    
+    <div id="video-container">
+        <video id="instruction-video" loop muted playsinline>
+            <!-- Vídeo será carregado via JavaScript -->
+        </video>
+    </div>
+    
+    <div id="camera-container">
+        <video id="camera-preview" autoplay muted playsinline></video>
+        <div id="overlay-text"></div>
+        <div id="countdown"></div>
+        <canvas id="photo-canvas" style="display: none;"></canvas>
+        <img id="captured-photo" alt="Foto capturada">
+    </div>
+    
+    <div id="success-message">
+        <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+        <div>Sucesso!</div>
+        <div>Obrigado por utilizar a cabine fotográfica 😃</div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        class PhotoBoothMobile {
+            constructor() {
+                this.socket = null;
+                this.sessionId = this.getSessionId();
+                this.isFullscreen = false;
+                this.photoCount = 0;
+                this.maxPhotos = 3;
+                this.stream = null;
+                this.frameImage = new Image();
+                
+                this.initializeElements();
+                this.setupEventListeners();
+                this.loadFrameImage();
+                this.displaySessionInfo();
+            }
+
+            initializeElements() {
+                this.fullscreenBtn = document.getElementById('fullscreen-btn');
+                this.videoContainer = document.getElementById('video-container');
+                this.instructionVideo = document.getElementById('instruction-video');
+                this.cameraContainer = document.getElementById('camera-container');
+                this.cameraPreview = document.getElementById('camera-preview');
+                this.overlayText = document.getElementById('overlay-text');
+                this.countdown = document.getElementById('countdown');
+                this.photoCanvas = document.getElementById('photo-canvas');
+                this.capturedPhoto = document.getElementById('captured-photo');
+                this.successMessage = document.getElementById('success-message');
+                this.sessionDisplay = document.getElementById('session-display');
+                this.ctx = this.photoCanvas.getContext('2d');
+            }
+
+            getSessionId() {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get('session') || 'mobile_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            displaySessionInfo() {
+                this.sessionDisplay.textContent = this.sessionId;
+            }
+
+            setupEventListeners() {
+                this.fullscreenBtn.addEventListener('click', () => this.enterFullscreen());
+                this.videoContainer.addEventListener('click', () => this.startPhotoProcess());
+                document.addEventListener('fullscreenchange', () => this.handleFullscreenChange());
+            }
+
+            loadFrameImage() {
+                // Substituir pela URL da sua moldura
+                this.frameImage.src = 'https://exemplo.com/moldura.png';
+                this.frameImage.crossOrigin = "anonymous";
+            }
+
+            async enterFullscreen() {
+                try {
+                    const element = document.documentElement;
+                    if (element.requestFullscreen) await element.requestFullscreen();
+                    else if (element.webkitRequestFullscreen) await element.webkitRequestFullscreen();
+                    else if (element.msRequestFullscreen) await element.msRequestFullscreen();
+                    
+                    this.isFullscreen = true;
+                    this.fullscreenBtn.style.display = 'none';
+                    this.loadInstructionVideo();
+                    
+                } catch (error) {
+                    console.error('Erro ao entrar em tela cheia:', error);
+                }
+            }
+
+            handleFullscreenChange() {
+                if (!document.fullscreenElement && !document.webkitFullscreenElement && 
+                    !document.msFullscreenElement) {
+                    this.isFullscreen = false;
+                    this.fullscreenBtn.style.display = 'block';
+                    this.stopCamera();
+                }
+            }
+
+            loadInstructionVideo() {
+                // Substituir pela URL do seu vídeo
+                this.instructionVideo.src = 'https://exemplo.com/video-instrucoes.mp4';
+                this.instructionVideo.play().catch(error => {
+                    console.error('Erro ao reproduzir vídeo:', error);
+                });
+            }
+
+            async startPhotoProcess() {
+                if (!this.isFullscreen) return;
+
+                this.videoContainer.style.display = 'none';
+                this.cameraContainer.style.display = 'flex';
+                
+                await this.initializeCamera();
+                await this.startPhotoSequence();
+            }
+
+            async initializeCamera() {
+                try {
+                    this.stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user' }, audio: false
+                    });
+                    
+                    this.cameraPreview.srcObject = this.stream;
+                    this.connectWebSocket();
+                    
+                } catch (error) {
+                    console.error('Erro ao acessar câmera:', error);
+                    this.showError('Não foi possível acessar a câmera');
+                }
+            }
+
+            connectWebSocket() {
+                const backendUrl = 'https://seu-backend.render.com';
+                this.socket = io(backendUrl);
+                
+                this.socket.on('connect', () => {
+                    console.log('Conectado ao servidor');
+                    this.socket.emit('join-session', this.sessionId);
+                });
+                
+                this.socket.on('session-reset', () => {
+                    this.resetToInitialState();
+                });
+            }
+
+            async startPhotoSequence() {
+                this.photoCount = 0;
+                await this.showPreparationMessage();
+                await this.capturePhotos();
+            }
+
+            async showPreparationMessage() {
+                this.overlayText.textContent = 'Prepare-se para tirar suas fotos';
+                this.overlayText.style.display = 'block';
+                await this.delay(3000);
+                this.overlayText.style.display = 'none';
+            }
+
+            async capturePhotos() {
+                for (let i = 0; i < this.maxPhotos; i++) {
+                    await this.captureSinglePhoto(i + 1);
+                    if (i < this.maxPhotos - 1) await this.delay(1000);
+                }
+                this.showSuccessMessage();
+            }
+
+            async captureSinglePhoto(photoNumber) {
+                await this.showCountdown();
+                const photoData = await this.takePhoto();
+                const framedPhoto = await this.applyFrame(photoData);
+                await this.showPhotoPreview(framedPhoto);
+                this.sendPhotoToPC(framedPhoto);
+            }
+
+            async showCountdown() {
+                this.countdown.style.display = 'block';
+                for (let i = 5; i > 0; i--) {
+                    this.countdown.textContent = i;
+                    await this.delay(1000);
+                }
+                this.countdown.style.display = 'none';
+            }
+
+            async takePhoto() {
+                const video = this.cameraPreview;
+                this.photoCanvas.width = video.videoWidth;
+                this.photoCanvas.height = video.videoHeight;
+                this.ctx.drawImage(video, 0, 0);
+                return this.photoCanvas.toDataURL('image/jpeg', 0.8);
+            }
+
+            async applyFrame(photoData) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        this.photoCanvas.width = img.width;
+                        this.photoCanvas.height = img.height;
+                        this.ctx.drawImage(img, 0, 0);
+                        
+                        if (this.frameImage.complete) {
+                            this.ctx.drawImage(this.frameImage, 0, 0, this.photoCanvas.width, this.photoCanvas.height);
+                        }
+                        
+                        resolve(this.photoCanvas.toDataURL('image/jpeg', 0.8));
+                    };
+                    img.src = photoData;
+                });
+            }
+
+            async showPhotoPreview(photoData) {
+                this.capturedPhoto.src = photoData;
+                this.capturedPhoto.style.display = 'block';
+                this.cameraPreview.style.display = 'none';
+                await this.delay(3000);
+                this.capturedPhoto.style.display = 'none';
+                this.cameraPreview.style.display = 'block';
+            }
+
+            sendPhotoToPC(photoData) {
+                if (this.socket && this.socket.connected) {
+                    this.socket.emit('photo-captured', {
+                        sessionId: this.sessionId,
+                        photo: {
+                            id: Date.now() + Math.random(),
+                            data: photoData,
+                            timestamp: new Date().toISOString()
+                        }
+                    });
+                }
+            }
+
+            showSuccessMessage() {
+                this.cameraContainer.style.display = 'none';
+                this.successMessage.style.display = 'flex';
+                setTimeout(() => this.resetToInitialState(), 5000);
+            }
+
+            resetToInitialState() {
+                this.stopCamera();
+                this.successMessage.style.display = 'none';
+                this.videoContainer.style.display = 'flex';
+                this.photoCount = 0;
+                if (this.instructionVideo) this.instructionVideo.play();
+            }
+
+            stopCamera() {
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                    this.stream = null;
+                }
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            showError(message) {
+                alert(message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new PhotoBoothMobile();
+        });
+    </script>
+</body>
+</html>
