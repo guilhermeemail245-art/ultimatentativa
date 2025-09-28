@@ -5,89 +5,366 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabine Fotográfica - Mobile</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #000; color: white; overflow: hidden; touch-action: manipulation; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #000; 
+            color: white; 
+            overflow: hidden; 
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
         
         #fullscreen-btn {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            padding: 20px 40px; font-size: 24px; background: #007bff; color: white;
-            border: none; border-radius: 10px; cursor: pointer; z-index: 1000;
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            padding: 25px 50px; 
+            font-size: 28px; 
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white; 
+            border: none; 
+            border-radius: 15px; 
+            cursor: pointer; 
+            z-index: 1000;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0,123,255,0.4);
+            transition: all 0.3s ease;
+        }
+        
+        #fullscreen-btn:hover {
+            transform: translate(-50%, -50%) scale(1.05);
+            box-shadow: 0 15px 40px rgba(0,123,255,0.6);
         }
         
         #video-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: black; display: flex; justify-content: center; align-items: center;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: black; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            z-index: 100;
         }
         
         #instruction-video {
-            width: 100%; height: 100%; object-fit: cover;
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover;
+        }
+        
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            z-index: 10;
+        }
+        
+        .video-overlay h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .video-overlay p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #ccc;
+            max-width: 80%;
+        }
+        
+        .touch-instruction {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 20px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         
         #camera-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: black; display: none; flex-direction: column;
-            justify-content: center; align-items: center;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: black; 
+            display: none; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center;
+            z-index: 200;
         }
         
         #camera-preview {
-            width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            transform: scaleX(-1);
         }
         
         #overlay-text {
-            position: absolute; top: 20%; font-size: 32px; font-weight: bold;
-            color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            text-align: center; z-index: 10; display: none;
+            position: absolute; 
+            top: 20%; 
+            font-size: 36px; 
+            font-weight: bold;
+            color: white; 
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
+            text-align: center; 
+            z-index: 10; 
+            display: none;
+            background: rgba(0,0,0,0.5);
+            padding: 20px 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
         }
         
         #countdown {
-            position: absolute; font-size: 120px; font-weight: bold;
-            color: white; text-shadow: 4px 4px 8px rgba(0,0,0,0.7);
-            z-index: 10; display: none;
+            position: absolute; 
+            font-size: 140px; 
+            font-weight: bold;
+            color: white; 
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.8);
+            z-index: 10; 
+            display: none;
+            background: rgba(0,0,0,0.7);
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border: 5px solid rgba(255,255,255,0.3);
         }
         
         #captured-photo {
-            position: absolute; width: 100%; height: 100%;
-            object-fit: cover; display: none; z-index: 5;
+            position: absolute; 
+            width: 100%; 
+            height: 100%;
+            object-fit: cover; 
+            display: none; 
+            z-index: 5;
+            transform: scaleX(-1);
         }
         
         #success-message {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); display: none; flex-direction: column;
-            justify-content: center; align-items: center; font-size: 32px;
-            text-align: center; z-index: 100;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(0,0,0,0.95); 
+            display: none; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            font-size: 36px;
+            text-align: center; 
+            z-index: 300;
+            padding: 20px;
+        }
+        
+        .success-icon {
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: bounce 1s ease;
         }
         
         .session-info {
-            position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.7);
-            padding: 10px; border-radius: 5px; font-size: 12px; z-index: 1000;
+            position: fixed; 
+            top: 15px; 
+            left: 15px; 
+            background: rgba(0,0,0,0.8);
+            padding: 12px 18px; 
+            border-radius: 10px; 
+            font-size: 14px; 
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            font-family: monospace;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.8);
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .status-connected {
+            color: #4CAF50;
+        }
+        
+        .status-disconnected {
+            color: #f44336;
+        }
+        
+        .photo-counter {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            display: none;
+        }
+        
+        #photo-canvas {
+            display: none;
+        }
+        
+        /* Animações */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-20px);}
+            60% {transform: translateY(-10px);}
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes countdownPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .countdown-animation {
+            animation: countdownPop 0.5s ease-out;
+        }
+        
+        /* Loading */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1000;
+            background: rgba(0,0,0,0.9);
+            padding: 30px;
+            border-radius: 15px;
+            display: none;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #333;
+            border-top: 5px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Error states */
+        .error-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            display: none;
         }
     </style>
 </head>
 <body>
-    <button id="fullscreen-btn">Abrir Tela Cheia</button>
+    <button id="fullscreen-btn">📱 Abrir Tela Cheia</button>
     
     <div class="session-info">
         Sessão: <span id="session-display">-</span>
     </div>
     
+    <div class="connection-status status-disconnected" id="connection-status">
+        ● Offline
+    </div>
+    
+    <div class="photo-counter" id="photo-counter">
+        📸 Foto <span id="current-photo">1</span>/3
+    </div>
+    
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Inicializando câmera...</p>
+    </div>
+    
+    <div class="error-message" id="error-message"></div>
+    
     <div id="video-container">
-        <video id="instruction-video" loop muted playsinline>
-            <!-- Vídeo será carregado via JavaScript -->
-        </video>
+        <div class="video-overlay">
+            <h2>🎪 Cabine Fotográfica</h2>
+            <p>Posicione-se e toque na tela para começar a experiência fotográfica!</p>
+            <div class="touch-instruction">👆 TOQUE PARA COMEÇAR</div>
+        </div>
+        <!-- O vídeo do YouTube será embedado via iframe -->
+        <div id="youtube-player"></div>
     </div>
     
     <div id="camera-container">
         <video id="camera-preview" autoplay muted playsinline></video>
         <div id="overlay-text"></div>
         <div id="countdown"></div>
-        <canvas id="photo-canvas" style="display: none;"></canvas>
+        <canvas id="photo-canvas"></canvas>
         <img id="captured-photo" alt="Foto capturada">
     </div>
     
     <div id="success-message">
-        <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
-        <div>Sucesso!</div>
-        <div>Obrigado por utilizar a cabine fotográfica 😃</div>
+        <div class="success-icon">✅</div>
+        <div style="margin-bottom: 15px;">Sucesso!</div>
+        <div style="font-size: 24px; color: #ccc;">Obrigado por utilizar a cabine fotográfica 😃</div>
+        <div style="font-size: 16px; color: #999; margin-top: 30px;">Retornando automaticamente...</div>
     </div>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -101,17 +378,19 @@
                 this.maxPhotos = 3;
                 this.stream = null;
                 this.frameImage = new Image();
+                this.isProcessing = false;
                 
                 this.initializeElements();
                 this.setupEventListeners();
                 this.loadFrameImage();
                 this.displaySessionInfo();
+                this.loadYouTubeVideo();
             }
 
             initializeElements() {
                 this.fullscreenBtn = document.getElementById('fullscreen-btn');
                 this.videoContainer = document.getElementById('video-container');
-                this.instructionVideo = document.getElementById('instruction-video');
+                this.youtubePlayer = document.getElementById('youtube-player');
                 this.cameraContainer = document.getElementById('camera-container');
                 this.cameraPreview = document.getElementById('camera-preview');
                 this.overlayText = document.getElementById('overlay-text');
@@ -120,6 +399,11 @@
                 this.capturedPhoto = document.getElementById('captured-photo');
                 this.successMessage = document.getElementById('success-message');
                 this.sessionDisplay = document.getElementById('session-display');
+                this.connectionStatus = document.getElementById('connection-status');
+                this.photoCounter = document.getElementById('photo-counter');
+                this.currentPhotoSpan = document.getElementById('current-photo');
+                this.loadingElement = document.getElementById('loading');
+                this.errorMessage = document.getElementById('error-message');
                 this.ctx = this.photoCanvas.getContext('2d');
             }
 
@@ -136,27 +420,57 @@
                 this.fullscreenBtn.addEventListener('click', () => this.enterFullscreen());
                 this.videoContainer.addEventListener('click', () => this.startPhotoProcess());
                 document.addEventListener('fullscreenchange', () => this.handleFullscreenChange());
+                document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
             }
 
             loadFrameImage() {
-                // Substituir pela URL da sua moldura
-                this.frameImage.src = 'https://exemplo.com/moldura.png';
+                // Carregar a moldura personalizada
+                this.frameImage.src = 'https://i.ibb.co/Kz2dhvVb/moldura.png';
                 this.frameImage.crossOrigin = "anonymous";
+                this.frameImage.onload = () => {
+                    console.log('✅ Moldura carregada com sucesso');
+                };
+                this.frameImage.onerror = () => {
+                    console.error('❌ Erro ao carregar moldura');
+                    this.showError('Erro ao carregar moldura. Continuando sem moldura...');
+                };
+            }
+
+            loadYouTubeVideo() {
+                // Embed do vídeo do YouTube
+                this.youtubePlayer.innerHTML = `
+                    <iframe 
+                        width="100%" 
+                        height="100%" 
+                        src="https://www.youtube.com/embed/d6kcR0ltsFw?autoplay=1&mute=1&loop=1&playlist=d6kcR0ltsFw&controls=0&modestbranding=1&rel=0&showinfo=0" 
+                        frameborder="0" 
+                        allow="autoplay; encrypted-media" 
+                        allowfullscreen>
+                    </iframe>
+                `;
             }
 
             async enterFullscreen() {
                 try {
                     const element = document.documentElement;
-                    if (element.requestFullscreen) await element.requestFullscreen();
-                    else if (element.webkitRequestFullscreen) await element.webkitRequestFullscreen();
-                    else if (element.msRequestFullscreen) await element.msRequestFullscreen();
+                    if (element.requestFullscreen) {
+                        await element.requestFullscreen();
+                    } else if (element.webkitRequestFullscreen) {
+                        await element.webkitRequestFullscreen();
+                    } else if (element.msRequestFullscreen) {
+                        await element.msRequestFullscreen();
+                    }
                     
                     this.isFullscreen = true;
                     this.fullscreenBtn.style.display = 'none';
-                    this.loadInstructionVideo();
+                    this.updateConnectionStatus('Conectando...', 'status-disconnected');
+                    
+                    // Tentar conectar ao WebSocket
+                    this.connectWebSocket();
                     
                 } catch (error) {
                     console.error('Erro ao entrar em tela cheia:', error);
+                    this.showError('Erro ao entrar em tela cheia');
                 }
             }
 
@@ -166,54 +480,112 @@
                     this.isFullscreen = false;
                     this.fullscreenBtn.style.display = 'block';
                     this.stopCamera();
+                    this.updateConnectionStatus('Offline', 'status-disconnected');
                 }
             }
 
-            loadInstructionVideo() {
-                // Substituir pela URL do seu vídeo
-                this.instructionVideo.src = 'https://exemplo.com/video-instrucoes.mp4';
-                this.instructionVideo.play().catch(error => {
-                    console.error('Erro ao reproduzir vídeo:', error);
+            handleVisibilityChange() {
+                if (document.hidden) {
+                    // Página não está visível, pausar recursos se necessário
+                    if (this.stream) {
+                        this.cameraPreview.pause();
+                    }
+                } else {
+                    // Página está visível, retomar recursos
+                    if (this.stream) {
+                        this.cameraPreview.play();
+                    }
+                }
+            }
+
+            updateConnectionStatus(message, className) {
+                this.connectionStatus.textContent = `● ${message}`;
+                this.connectionStatus.className = `connection-status ${className}`;
+            }
+
+            updatePhotoCounter(current) {
+                this.currentPhotoSpan.textContent = current;
+                this.photoCounter.style.display = 'block';
+            }
+
+            connectWebSocket() {
+                const backendUrl = 'https://seu-backend.render.com'; // ATUALIZAR COM SUA URL
+                this.socket = io(backendUrl, {
+                    timeout: 10000,
+                    reconnectionAttempts: 5
+                });
+                
+                this.socket.on('connect', () => {
+                    console.log('✅ Conectado ao servidor');
+                    this.updateConnectionStatus('Online', 'status-connected');
+                    this.socket.emit('join-session', this.sessionId);
+                    this.socket.emit('mobile-connected', this.sessionId);
+                });
+                
+                this.socket.on('disconnect', () => {
+                    console.log('❌ Desconectado do servidor');
+                    this.updateConnectionStatus('Offline', 'status-disconnected');
+                });
+                
+                this.socket.on('connect_error', (error) => {
+                    console.error('❌ Erro de conexão:', error);
+                    this.updateConnectionStatus('Erro de conexão', 'status-disconnected');
+                });
+                
+                this.socket.on('session-reset', () => {
+                    console.log('🔄 Sessão reiniciada pelo PC');
+                    this.resetToInitialState();
                 });
             }
 
             async startPhotoProcess() {
-                if (!this.isFullscreen) return;
+                if (!this.isFullscreen || this.isProcessing) return;
 
+                this.isProcessing = true;
                 this.videoContainer.style.display = 'none';
                 this.cameraContainer.style.display = 'flex';
+                this.loadingElement.style.display = 'block';
                 
-                await this.initializeCamera();
-                await this.startPhotoSequence();
+                try {
+                    await this.initializeCamera();
+                    await this.startPhotoSequence();
+                } catch (error) {
+                    console.error('Erro no processo de fotos:', error);
+                    this.showError('Erro ao iniciar câmera. Tente novamente.');
+                    this.resetToInitialState();
+                } finally {
+                    this.loadingElement.style.display = 'none';
+                    this.isProcessing = false;
+                }
             }
 
             async initializeCamera() {
                 try {
+                    // Tentar acesso à câmera frontal
                     this.stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: 'user' }, audio: false
+                        video: { 
+                            facingMode: 'user',
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        }, 
+                        audio: false
                     });
                     
                     this.cameraPreview.srcObject = this.stream;
-                    this.connectWebSocket();
+                    
+                    // Aguardar o vídeo estar pronto
+                    await new Promise((resolve) => {
+                        this.cameraPreview.onloadedmetadata = () => {
+                            resolve();
+                        };
+                    });
+                    
+                    console.log('✅ Câmera inicializada com sucesso');
                     
                 } catch (error) {
-                    console.error('Erro ao acessar câmera:', error);
-                    this.showError('Não foi possível acessar a câmera');
+                    console.error('❌ Erro ao acessar câmera:', error);
+                    throw new Error('Não foi possível acessar a câmera. Verifique as permissões.');
                 }
-            }
-
-            connectWebSocket() {
-                const backendUrl = 'https://seu-backend.render.com';
-                this.socket = io(backendUrl);
-                
-                this.socket.on('connect', () => {
-                    console.log('Conectado ao servidor');
-                    this.socket.emit('join-session', this.sessionId);
-                });
-                
-                this.socket.on('session-reset', () => {
-                    this.resetToInitialState();
-                });
             }
 
             async startPhotoSequence() {
@@ -223,34 +595,58 @@
             }
 
             async showPreparationMessage() {
-                this.overlayText.textContent = 'Prepare-se para tirar suas fotos';
+                this.overlayText.textContent = '📸 Prepare-se para tirar suas fotos!';
                 this.overlayText.style.display = 'block';
+                
                 await this.delay(3000);
+                
                 this.overlayText.style.display = 'none';
             }
 
             async capturePhotos() {
                 for (let i = 0; i < this.maxPhotos; i++) {
+                    this.photoCount = i + 1;
+                    this.updatePhotoCounter(this.photoCount);
+                    
                     await this.captureSinglePhoto(i + 1);
-                    if (i < this.maxPhotos - 1) await this.delay(1000);
+                    
+                    if (i < this.maxPhotos - 1) {
+                        await this.delay(1000); // Pausa entre fotos
+                    }
                 }
+                
                 this.showSuccessMessage();
             }
 
             async captureSinglePhoto(photoNumber) {
+                // Contagem regressiva
                 await this.showCountdown();
+                
+                // Capturar foto
                 const photoData = await this.takePhoto();
+                
+                // Aplicar moldura
                 const framedPhoto = await this.applyFrame(photoData);
+                
+                // Mostrar pré-visualização
                 await this.showPhotoPreview(framedPhoto);
+                
+                // Enviar para PC
                 this.sendPhotoToPC(framedPhoto);
             }
 
             async showCountdown() {
-                this.countdown.style.display = 'block';
+                this.countdown.style.display = 'flex';
+                
                 for (let i = 5; i > 0; i--) {
                     this.countdown.textContent = i;
+                    this.countdown.classList.add('countdown-animation');
+                    
                     await this.delay(1000);
+                    
+                    this.countdown.classList.remove('countdown-animation');
                 }
+                
                 this.countdown.style.display = 'none';
             }
 
@@ -258,23 +654,36 @@
                 const video = this.cameraPreview;
                 this.photoCanvas.width = video.videoWidth;
                 this.photoCanvas.height = video.videoHeight;
-                this.ctx.drawImage(video, 0, 0);
-                return this.photoCanvas.toDataURL('image/jpeg', 0.8);
+                
+                // Desenhar o vídeo no canvas (já espelhado)
+                this.ctx.save();
+                this.ctx.scale(-1, 1);
+                this.ctx.drawImage(video, -this.photoCanvas.width, 0, this.photoCanvas.width, this.photoCanvas.height);
+                this.ctx.restore();
+                
+                return this.photoCanvas.toDataURL('image/jpeg', 0.9);
             }
 
             async applyFrame(photoData) {
                 return new Promise((resolve) => {
                     const img = new Image();
                     img.onload = () => {
+                        // Redimensionar canvas para a foto
                         this.photoCanvas.width = img.width;
                         this.photoCanvas.height = img.height;
-                        this.ctx.drawImage(img, 0, 0);
                         
-                        if (this.frameImage.complete) {
+                        // Desenhar foto original (já espelhada)
+                        this.ctx.save();
+                        this.ctx.scale(-1, 1);
+                        this.ctx.drawImage(img, -this.photoCanvas.width, 0, this.photoCanvas.width, this.photoCanvas.height);
+                        this.ctx.restore();
+                        
+                        // Desenhar moldura se carregada
+                        if (this.frameImage.complete && this.frameImage.naturalWidth > 0) {
                             this.ctx.drawImage(this.frameImage, 0, 0, this.photoCanvas.width, this.photoCanvas.height);
                         }
                         
-                        resolve(this.photoCanvas.toDataURL('image/jpeg', 0.8));
+                        resolve(this.photoCanvas.toDataURL('image/jpeg', 0.9));
                     };
                     img.src = photoData;
                 });
@@ -284,7 +693,9 @@
                 this.capturedPhoto.src = photoData;
                 this.capturedPhoto.style.display = 'block';
                 this.cameraPreview.style.display = 'none';
+                
                 await this.delay(3000);
+                
                 this.capturedPhoto.style.display = 'none';
                 this.cameraPreview.style.display = 'block';
             }
@@ -296,16 +707,24 @@
                         photo: {
                             id: Date.now() + Math.random(),
                             data: photoData,
-                            timestamp: new Date().toISOString()
+                            timestamp: new Date().toISOString(),
+                            number: this.photoCount
                         }
                     });
+                    console.log(`✅ Foto ${this.photoCount} enviada para o PC`);
+                } else {
+                    console.warn('⚠️ Socket não conectado, foto não enviada');
                 }
             }
 
             showSuccessMessage() {
                 this.cameraContainer.style.display = 'none';
+                this.photoCounter.style.display = 'none';
                 this.successMessage.style.display = 'flex';
-                setTimeout(() => this.resetToInitialState(), 5000);
+                
+                setTimeout(() => {
+                    this.resetToInitialState();
+                }, 5000);
             }
 
             resetToInitialState() {
@@ -313,12 +732,18 @@
                 this.successMessage.style.display = 'none';
                 this.videoContainer.style.display = 'flex';
                 this.photoCount = 0;
-                if (this.instructionVideo) this.instructionVideo.play();
+                this.photoCounter.style.display = 'none';
+                this.isProcessing = false;
+                
+                // Recarregar o vídeo do YouTube
+                this.loadYouTubeVideo();
             }
 
             stopCamera() {
                 if (this.stream) {
-                    this.stream.getTracks().forEach(track => track.stop());
+                    this.stream.getTracks().forEach(track => {
+                        track.stop();
+                    });
                     this.stream = null;
                 }
             }
@@ -328,13 +753,35 @@
             }
 
             showError(message) {
-                alert(message);
+                this.errorMessage.textContent = message;
+                this.errorMessage.style.display = 'block';
+                
+                setTimeout(() => {
+                    this.errorMessage.style.display = 'none';
+                }, 5000);
             }
         }
 
+        // Inicializar aplicação quando o DOM estiver carregado
         document.addEventListener('DOMContentLoaded', () => {
             new PhotoBoothMobile();
         });
+
+        // Prevenir zoom com double-tap
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
     </script>
 </body>
 </html>
