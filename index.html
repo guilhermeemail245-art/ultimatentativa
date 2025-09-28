@@ -3,127 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cabine Fotográfica - Controle Principal</title>
+    <title>Cabine Fotográfica</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Carregar QRCode primeiro -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎪 Sistema de Cabine Fotográfica - Feira Escolar</h1>
-            <p>Controle principal - Gerar QR Code para o celular da cabine</p>
-        </div>
+    <h1>Cabine Fotográfica</h1>
 
-        <div class="access-links">
-            <div class="access-card">
-                <h3>📱 QR Code para Celular da Cabine</h3>
-                <p>Clique no botão abaixo para gerar o QR Code que será escaneado pelo celular da cabine</p>
-                
-                <!-- Botão para gerar QR Code -->
-                <button id="generate-mobile-qr-btn" class="control-btn primary">
-                    📱 Gerar QR Code do Celular
-                </button>
-                
-                <div id="mobile-qr-section" class="qr-section" style="display: none;">
-                    <div id="mobile-qr" class="qr-large"></div>
-                    <p>Escaneie este QR Code no celular da cabine</p>
-                    <p class="url-display" id="mobile-url"></p>
-                </div>
-                
-                <div class="instructions">
-                    <h3>📋 Instruções de Uso</h3>
-                    <ol>
-                        <li><strong>Clique em "Gerar QR Code do Celular"</strong></li>
-                        <li><strong>Escaneie com o celular da cabine</strong></li>
-                        <li><strong>No celular: Toque em "Abrir Tela Cheia"</strong></li>
-                        <li><strong>Toque na tela do celular para iniciar as fotos</strong></li>
-                    </ol>
-                </div>
-                
-                <p class="session-info">Sessão: <span id="session-display">-</span></p>
-                <button id="new-session-btn" class="control-btn secondary">🔄 Nova Sessão</button>
-            </div>
-            
-            <div class="access-card">
-                <h3>👀 Visualizador Público</h3>
-                <p>Página para visualização e download das fotos</p>
-                <div id="viewer-qr" class="qr-small"></div>
-                <p class="url-display" id="viewer-url-display">-</p>
-            </div>
-        </div>
+    <!-- Sessão -->
+    <div id="session-display"></div>
+    <div id="connection-status"></div>
+    <div id="photo-count"></div>
+    <div id="mobile-status"></div>
 
-        <div class="tabs">
-            <button class="tab active" onclick="openTab('control')">🎛️ Controle PC</button>
-            <button class="tab" onclick="openTab('viewer')">📸 Visualizador</button>
-        </div>
+    <!-- Botões de controle -->
+    <button id="generate-qr-btn">Gerar QR Code (PC)</button>
+    <canvas id="qr-code"></canvas>
 
-        <!-- ABA CONTROLE PC -->
-        <div id="control" class="tab-content active">
-            <div class="monitoring-section">
-                <h2>📹 Status do Sistema</h2>
-                <div class="status-indicator">
-                    <span id="connection-status" class="status-offline">● Offline</span>
-                    <span id="photo-count">Fotos: 0</span>
-                    <span id="mobile-status">📱 Celular: Não conectado</span>
-                </div>
-            </div>
-            
-            <div class="controls-section">
-                <h2>🎮 Controles</h2>
-                <button id="generate-qr-btn" class="control-btn primary">📱 Gerar QR Code do Visualizador</button>
-                <button id="reset-session-btn" class="control-btn secondary">🔄 Finalizar Sessão</button>
-            </div>
-            
-            <div class="qr-section" id="qr-section">
-                <h2>📱 QR Code do Visualizador Público</h2>
-                <div id="qr-code" class="qr-large"></div>
-                <p>Escaneie este QR Code para visualizar e baixar as fotos</p>
-                <p class="url-display" id="viewer-url"></p>
-            </div>
-            
-            <div class="gallery-section">
-                <h2>🖼️ Fotos Capturadas <span id="gallery-count">(0)</span></h2>
-                <div class="photos-grid" id="photos-grid">
-                    <div class="empty-gallery">
-                        <p>Nenhuma foto capturada ainda</p>
-                        <p>⏳ Aguardando o celular conectar e iniciar...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- 🚀 Botão e canvas adicionados para celular -->
+    <button id="generate-mobile-qr-btn">Gerar QR Code (Celular)</button>
+    <canvas id="mobile-qr-code"></canvas>
 
-        <!-- ABA VISUALIZADOR -->
-        <div id="viewer" class="tab-content">
-            <div class="viewer-container">
-                <div class="viewer-header">
-                    <h1>📸 Suas Fotos da Cabine Fotográfica</h1>
-                    <p>Faça o download das suas fotos memoráveis!</p>
-                </div>
-                
-                <div id="viewer-loading" class="loading">
-                    <p>Carregando suas fotos...</p>
-                </div>
-                
-                <div id="viewer-empty-state" class="empty-state">
-                    <p>📷 Nenhuma foto disponível</p>
-                    <p>As fotos aparecerão aqui após serem capturadas</p>
-                </div>
-                
-                <div class="viewer-photos-grid" id="viewer-photos-grid">
-                    <!-- Fotos serão carregadas aqui -->
-                </div>
-            </div>
-        </div>
-    </div>
+    <button id="reset-session-btn">Resetar Sessão</button>
+    <button id="new-session-btn">Nova Sessão</button>
 
-    <!-- Modal para foto ampliada -->
-    <div class="modal" id="photo-modal">
-        <button class="modal-close" id="modal-close">&times;</button>
-        <img class="modal-content" id="modal-image" src="" alt="Foto ampliada">
-    </div>
-
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
