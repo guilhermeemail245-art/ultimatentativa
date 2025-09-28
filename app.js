@@ -114,7 +114,7 @@ class PhotoBoothSystem {
     }
 
     connectWebSocket() {
-        const backendUrl = 'https://seu-backend.render.com'; // ATUALIZAR COM SUA URL
+        const backendUrl = 'https://rendercerto-s7w2.onrender.com'; // ATUALIZAR COM SUA URL
         this.socket = io(backendUrl);
         
         this.socket.on('connect', () => {
@@ -321,7 +321,7 @@ class PhotoBoothSystem {
 
     async uploadToIMGBB() {
         const uploadedUrls = [];
-        const apiKey = 'sua_chave_api_imgbb'; // SUBSTITUIR PELA SUA CHAVE
+        const apiKey = '6734e028b20f88d5795128d242f85582'; // SUBSTITUIR PELA SUA CHAVE
         
         for (const [index, photo] of this.photos.entries()) {
             try {
