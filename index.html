@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cabine Fotográfica - Controle Principal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎪 Sistema de Cabine Fotográfica - Feira Escolar</h1>
+            <p>Controle principal - Acesse todas as funcionalidades</p>
+        </div>
+
+        <div class="access-links">
+            <div class="access-card">
+                <h3>📱 Controle da Cabine (Celular)</h3>
+                <p>Acesso para o dispositivo móvel dentro da cabine</p>
+                <div id="mobile-qr" class="qr-small"></div>
+                <a href="mobile.html" class="access-link" target="_blank">Abrir Controle Mobile</a>
+                <p class="session-info">Sessão: <span id="session-display">-</span></p>
+            </div>
+            
+            <div class="access-card">
+                <h3>👀 Visualizador Público</h3>
+                <p>Página para visualização e download das fotos</p>
+                <div id="viewer-qr" class="qr-small"></div>
+                <a href="viewer.html" class="access-link" target="_blank">Abrir Visualizador</a>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="openTab('control')">🎛️ Controle PC</button>
+            <button class="tab" onclick="openTab('viewer')">📸 Visualizador</button>
+        </div>
+
+        <!-- ABA CONTROLE PC -->
+        <div id="control" class="tab-content active">
+            <div class="monitoring-section">
+                <h2>📹 Monitoramento em Tempo Real</h2>
+                <div class="status-indicator">
+                    <span id="connection-status" class="status-offline">● Offline</span>
+                    <span id="photo-count">Fotos: 0</span>
+                </div>
+            </div>
+            
+            <div class="controls-section">
+                <h2>🎮 Controles</h2>
+                <button id="generate-qr-btn" class="control-btn">📱 Gerar QR Code / Enviar para IMGBB</button>
+                <button id="reset-session-btn" class="control-btn">🔄 Finalizar Sessão</button>
+            </div>
+            
+            <div class="qr-section" id="qr-section">
+                <h2>📱 QR Code do Visualizador</h2>
+                <div id="qr-code"></div>
+                <p>Escaneie este QR Code para visualizar as fotos</p>
+                <p id="viewer-url" class="url-display"></p>
+            </div>
+            
+            <div class="gallery-section">
+                <h2>🖼️ Fotos Capturadas <span id="gallery-count">(0)</span></h2>
+                <div class="photos-grid" id="photos-grid">
+                    <div class="empty-gallery">
+                        <p>Nenhuma foto capturada ainda</p>
+                        <p>⏳ Aguardando o celular iniciar...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA VISUALIZADOR -->
+        <div id="viewer" class="tab-content">
+            <div class="viewer-container">
+                <div class="viewer-header">
+                    <h1>📸 Suas Fotos da Cabine Fotográfica</h1>
+                    <p>Faça o download das suas fotos memoráveis!</p>
+                </div>
+                
+                <div id="viewer-loading" class="loading">
+                    <p>Carregando suas fotos...</p>
+                </div>
+                
+                <div id="viewer-empty-state" class="empty-state">
+                    <p>📷 Nenhuma foto disponível</p>
+                    <p>As fotos aparecerão aqui após serem capturadas</p>
+                </div>
+                
+                <div class="viewer-photos-grid" id="viewer-photos-grid">
+                    <!-- Fotos serão carregadas aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para foto ampliada -->
+    <div class="modal" id="photo-modal">
+        <button class="modal-close" id="modal-close">&times;</button>
+        <img class="modal-content" id="modal-image" src="" alt="Foto ampliada">
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
