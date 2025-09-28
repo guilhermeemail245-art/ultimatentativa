@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabine Fotográfica - Controle Principal</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Carregar QRCode primeiro -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -26,6 +28,17 @@
                 <div id="mobile-qr-section" class="qr-section" style="display: none;">
                     <div id="mobile-qr" class="qr-large"></div>
                     <p>Escaneie este QR Code no celular da cabine</p>
+                    <p class="url-display" id="mobile-url"></p>
+                </div>
+                
+                <div class="instructions">
+                    <h3>📋 Instruções de Uso</h3>
+                    <ol>
+                        <li><strong>Clique em "Gerar QR Code do Celular"</strong></li>
+                        <li><strong>Escaneie com o celular da cabine</strong></li>
+                        <li><strong>No celular: Toque em "Abrir Tela Cheia"</strong></li>
+                        <li><strong>Toque na tela do celular para iniciar as fotos</strong></li>
+                    </ol>
                 </div>
                 
                 <p class="session-info">Sessão: <span id="session-display">-</span></p>
@@ -40,7 +53,6 @@
             </div>
         </div>
 
-        <!-- Resto do código permanece igual -->
         <div class="tabs">
             <button class="tab active" onclick="openTab('control')">🎛️ Controle PC</button>
             <button class="tab" onclick="openTab('viewer')">📸 Visualizador</button>
@@ -112,7 +124,6 @@
     </div>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
