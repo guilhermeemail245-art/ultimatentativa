@@ -16,8 +16,18 @@
         <div class="access-links">
             <div class="access-card">
                 <h3>📱 QR Code para Celular da Cabine</h3>
-                <p>Escaneie este QR Code no celular que ficará dentro da cabine</p>
-                <div id="mobile-qr" class="qr-large"></div>
+                <p>Clique no botão abaixo para gerar o QR Code que será escaneado pelo celular da cabine</p>
+                
+                <!-- Botão para gerar QR Code -->
+                <button id="generate-mobile-qr-btn" class="control-btn primary">
+                    📱 Gerar QR Code do Celular
+                </button>
+                
+                <div id="mobile-qr-section" class="qr-section" style="display: none;">
+                    <div id="mobile-qr" class="qr-large"></div>
+                    <p>Escaneie este QR Code no celular da cabine</p>
+                </div>
+                
                 <p class="session-info">Sessão: <span id="session-display">-</span></p>
                 <button id="new-session-btn" class="control-btn secondary">🔄 Nova Sessão</button>
             </div>
@@ -30,6 +40,7 @@
             </div>
         </div>
 
+        <!-- Resto do código permanece igual -->
         <div class="tabs">
             <button class="tab active" onclick="openTab('control')">🎛️ Controle PC</button>
             <button class="tab" onclick="openTab('viewer')">📸 Visualizador</button>
@@ -48,7 +59,7 @@
             
             <div class="controls-section">
                 <h2>🎮 Controles</h2>
-                <button id="generate-qr-btn" class="control-btn">📱 Gerar QR Code do Visualizador</button>
+                <button id="generate-qr-btn" class="control-btn primary">📱 Gerar QR Code do Visualizador</button>
                 <button id="reset-session-btn" class="control-btn secondary">🔄 Finalizar Sessão</button>
             </div>
             
