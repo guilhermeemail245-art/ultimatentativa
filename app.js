@@ -4,12 +4,13 @@ class PhotoBoothSystem {
         this.sessionId = this.generateSessionId();
         this.photos = [];
         this.viewerBaseUrl = window.location.origin;
+        this.mobileConnected = false;
         
         this.initializeElements();
         this.setupEventListeners();
         this.connectWebSocket();
-        this.generateAccessQRs();
-        this.updateGalleryCount();
+        this.generateMobileQR();
+        this.displayInstructions();
     }
 
     initializeElements() {
@@ -17,11 +18,14 @@ class PhotoBoothSystem {
         this.sessionDisplay = document.getElementById('session-display');
         this.connectionStatus = document.getElementById('connection-status');
         this.photoCount = document.getElementById('photo-count');
+        this.mobileStatus = document.getElementById('mobile-status');
         this.generateQrBtn = document.getElementById('generate-qr-btn');
         this.resetSessionBtn = document.getElementById('reset-session-btn');
+        this.newSessionBtn = document.getElementById('new-session-btn');
         this.qrSection = document.getElementById('qr-section');
         this.qrCodeElement = document.getElementById('qr-code');
         this.viewerUrlElement = document.getElementById('viewer-url');
+        this.viewerUrlDisplay = document.getElementById('viewer-url-display');
         this.photosGrid = document.getElementById('photos-grid');
         this.galleryCount = document.getElementById('gallery-count');
         
@@ -37,12 +41,12 @@ class PhotoBoothSystem {
         
         // QR Codes de acesso
         this.mobileQrElement = document.getElementById('mobile-qr');
-        this.viewerQrElement = document.getElementById('viewer-qr');
     }
 
     setupEventListeners() {
-        this.generateQrBtn.addEventListener('click', () => this.generateQRCode());
+        this.generateQrBtn.addEventListener('click', () => this.generateViewerQRCode());
         this.resetSessionBtn.addEventListener('click', () => this.resetSession());
+        this.newSessionBtn.addEventListener('click', () => this.newSession());
         this.modalClose.addEventListener('click', () => this.closeModal());
         this.photoModal.addEventListener('click', (e) => {
             if (e.target === this.photoModal) this.closeModal();
@@ -50,23 +54,67 @@ class PhotoBoothSystem {
     }
 
     generateSessionId() {
-        return 'session_' + Math.random().toString(36).substr(2, 9);
+        return 'sessao_' + Math.random().toString(36).substr(2, 6).toUpperCase();
     }
 
-    generateAccessQRs() {
+    displayInstructions() {
+        const instructions = `
+            <div class="instructions">
+                <h3>📋 Instruções de Uso - Início do Dia</h3>
+                <ol>
+                    <li><strong>Gerar QR Code</strong> - O QR Code acima é para o celular da cabine</li>
+                    <li><strong>Escaneie no celular</strong> - Use a câmera do celular da cabine para escanear</li>
+                    <li><strong>Toque na tela</strong> - No celular, toque na tela para iniciar as fotos</li>
+                    <li><strong>Gerar Visualizador</strong> - Após as fotos, gere QR Code do visualizador</li>
+                </ol>
+            </div>
+        `;
+        document.querySelector('.access-card').insertAdjacentHTML('beforeend', instructions);
+    }
+
+    generateMobileQR() {
         this.sessionDisplay.textContent = this.sessionId;
         
-        // QR Code para mobile
+        // Gerar URL para o mobile com session ID
         const mobileUrl = `${window.location.origin}/mobile.html?session=${this.sessionId}`;
-        QRCode.toCanvas(this.mobileQrElement, mobileUrl, { width: 200, height: 200 });
         
-        // QR Code para visualizador
-        const viewerUrl = `${window.location.origin}/viewer.html`;
-        QRCode.toCanvas(this.viewerQrElement, viewerUrl, { width: 200, height: 200 });
+        // Gerar QR Code grande para fácil escaneamento
+        QRCode.toCanvas(this.mobileQrElement, mobileUrl, { 
+            width: 280, 
+            height: 280,
+            margin: 2
+        }, (error) => {
+            if (error) {
+                console.error('Erro ao gerar QR Code mobile:', error);
+                this.mobileQrElement.innerHTML = '<p>Erro ao gerar QR Code</p>';
+            } else {
+                console.log('QR Code mobile gerado com sucesso');
+            }
+        });
+
+        // Também mostrar a URL para copiar se necessário
+        this.viewerUrlDisplay.textContent = mobileUrl;
+    }
+
+    newSession() {
+        // Gerar nova sessão
+        this.sessionId = this.generateSessionId();
+        this.clearPhotos();
+        this.mobileConnected = false;
+        this.updateMobileStatus();
+        this.generateMobileQR();
+        this.qrSection.style.display = 'none';
+        
+        // Reconectar WebSocket com nova sessão
+        if (this.socket) {
+            this.socket.emit('join-session', this.sessionId);
+        }
+        
+        alert(`Nova sessão criada: ${this.sessionId}\n\nEscaneie o novo QR Code no celular da cabine.`);
     }
 
     connectWebSocket() {
-        const backendUrl = 'https://rendercerto-s7w2.onrender.com';
+        const backendUrl = 'https://seu-backend.render.com'; // ATUALIZAR COM SUA URL
         this.socket = io(backendUrl);
         
         this.socket.on('connect', () => {
@@ -84,12 +132,29 @@ class PhotoBoothSystem {
         this.socket.on('new-photo', (photo) => {
             this.addPhoto(photo);
             this.updateViewerPhotos();
+            this.mobileConnected = true;
+            this.updateMobileStatus();
+        });
+        
+        this.socket.on('mobile-connected', () => {
+            this.mobileConnected = true;
+            this.updateMobileStatus();
         });
         
         this.socket.on('session-reset', () => {
             this.clearPhotos();
             this.updateViewerPhotos();
         });
+    }
+
+    updateMobileStatus() {
+        if (this.mobileConnected) {
+            this.mobileStatus.textContent = '📱 Celular: Conectado';
+            this.mobileStatus.className = 'mobile-connected';
+        } else {
+            this.mobileStatus.textContent = '📱 Celular: Não conectado';
+            this.mobileStatus.className = 'mobile-disconnected';
+        }
     }
 
     addPhoto(photo) {
@@ -100,7 +165,6 @@ class PhotoBoothSystem {
     }
 
     renderPhoto(photo) {
-        // Remove empty state se existir
         const emptyGallery = this.photosGrid.querySelector('.empty-gallery');
         if (emptyGallery) {
             emptyGallery.remove();
@@ -146,7 +210,7 @@ class PhotoBoothSystem {
             this.photosGrid.innerHTML = `
                 <div class="empty-gallery">
                     <p>Nenhuma foto capturada ainda</p>
-                    <p>⏳ Aguardando o celular iniciar...</p>
+                    <p>⏳ Aguardando o celular conectar e iniciar...</p>
                 </div>
             `;
             return;
@@ -205,28 +269,28 @@ class PhotoBoothSystem {
         this.photoCount.textContent = 'Fotos: 0';
     }
 
-    async generateQRCode() {
+    async generateViewerQRCode() {
         if (this.photos.length === 0) {
-            alert('Nenhuma foto capturada ainda!');
+            alert('Nenhuma foto capturada ainda! Aguarde o celular tirar as fotos.');
             return;
         }
 
         this.generateQrBtn.disabled = true;
-        this.generateQrBtn.textContent = '⏳ Enviando...';
+        this.generateQrBtn.textContent = '⏳ Gerando...';
 
         try {
+            // Upload para IMGBB
             const uploadedUrls = await this.uploadToIMGBB();
-            const viewerUrl = `${window.location.origin}/viewer.html?photos=${encodeURIComponent(JSON.stringify(uploadedUrls))}`;
             
-            // Atualizar QR Code do visualizador
-            this.viewerQrElement.innerHTML = '';
-            QRCode.toCanvas(this.viewerQrElement, viewerUrl, { width: 200, height: 200 });
+            // Gerar URL do visualizador com as fotos
+            const viewerUrl = `${window.location.origin}/viewer.html?photos=${encodeURIComponent(JSON.stringify(uploadedUrls))}`;
             
             // Gerar QR Code para exibição
             this.qrCodeElement.innerHTML = '';
             QRCode.toCanvas(this.qrCodeElement, viewerUrl, {
-                width: 256,
-                height: 256
+                width: 280,
+                height: 280,
+                margin: 2
             }, (error) => {
                 if (error) {
                     console.error('Erro ao gerar QR Code:', error);
@@ -238,9 +302,12 @@ class PhotoBoothSystem {
                 this.viewerUrlElement.textContent = viewerUrl;
                 this.generateQrBtn.textContent = '✅ QR Code Gerado!';
                 
+                // Scroll para o QR Code
+                this.qrSection.scrollIntoView({ behavior: 'smooth' });
+                
                 setTimeout(() => {
                     this.generateQrBtn.disabled = false;
-                    this.generateQrBtn.textContent = '📱 Gerar QR Code / Enviar para IMGBB';
+                    this.generateQrBtn.textContent = '📱 Gerar QR Code do Visualizador';
                 }, 3000);
             });
             
@@ -248,25 +315,28 @@ class PhotoBoothSystem {
             console.error('Erro ao gerar QR Code:', error);
             alert('Erro ao gerar QR Code. Tente novamente.');
             this.generateQrBtn.disabled = false;
-            this.generateQrBtn.textContent = '📱 Gerar QR Code / Enviar para IMGBB';
+            this.generateQrBtn.textContent = '📱 Gerar QR Code do Visualizador';
         }
     }
 
     async uploadToIMGBB() {
         const uploadedUrls = [];
-        const apiKey = '6734e028b20f88d5795128d242f85582'; // Substituir pela sua chave
+        const apiKey = 'sua_chave_api_imgbb'; // SUBSTITUIR PELA SUA CHAVE
         
         for (const [index, photo] of this.photos.entries()) {
             try {
                 console.log(`Enviando foto ${index + 1}/${this.photos.length}...`);
                 
+                // Converter base64 para blob
                 const response = await fetch(photo.data);
                 const blob = await response.blob();
                 
+                // Criar form data para upload
                 const formData = new FormData();
-                formData.append('image', blob);
+                formData.append('image', blob.split(',')[1]); // Remover header base64
                 formData.append('key', apiKey);
                 
+                // Fazer upload para IMGBB
                 const uploadResponse = await fetch('https://api.imgbb.com/1/upload', {
                     method: 'POST',
                     body: formData
@@ -297,7 +367,9 @@ class PhotoBoothSystem {
         }
         this.clearPhotos();
         this.qrSection.style.display = 'none';
-        alert('Sessão finalizada. O celular voltará para o vídeo inicial.');
+        this.mobileConnected = false;
+        this.updateMobileStatus();
+        alert('Sessão finalizada. O celular voltará para o vídeo inicial.\n\nPara nova sessão, use o botão "Nova Sessão".');
     }
 }
 
